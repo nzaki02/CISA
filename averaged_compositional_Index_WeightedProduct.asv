@@ -1,0 +1,135 @@
+% THIS PROGRAM CALCULATES THE AVERAGED COMPOSITIPNAL INDEX (mjw) VALUES
+% FOR A GIVEN PROTIEN SEQUENCE over a window of size w. It predicts the
+% class of each Amino Acid component of this sequence. If the
+% averaged Linker Index value of an AA is less than the threshold, it will
+% be assigned as 1, and it will be assigned 0 otherwise.
+% It also returns the true labels of the the given protien sequence.
+% and then the function calculates the prediction accuracy by comparing the
+% predicted labels with the true labels.
+% 
+% DATE 20-09-2012
+% Author: Maad Shatnawi
+
+
+function [compositional_index, compositional_index_output, EVAL] = averaged_compositional_Index_WeightedProduct (proteinSequence, trueLabels, w, threshold, gama, beta)
+
+L= size (proteinSequence,2);    % L is the sequence length
+% gama= 0.8; gama is determined in the main routine
+%beta= 1-gama;
+epsilon= 1;
+
+% the following calculates the AA composision (counts) in the
+% protein sequenses.
+%[Data_Header, Data_Seq] = fastaread(protein_sequences);
+%Freq_Data = aacount (char( (Data_Seq)));
+
+Freq_Data = aacount (char( (proteinSequence)));
+F3 = struct2cell(Freq_Data);
+F13= cell2mat(F3);
+
+
+AA = {'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'};
+
+
+%Linker_Index = -log(F11 ./ F12);
+%Comp_Index_Matrix = (Linker_Index .* F13) * 100 / sum(F13); 
+
+Comp_Matrix =  F13 * 100 / sum(F13); 
+
+
+Comp_Cells = mat2cell(Comp_Matrix,[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ],[1]);
+%Comp_Structure = cell2struct(Comp_Cells, AA, 1);
+CompIndex = cell2struct(Comp_Cells, AA, 1);
+%CompIndex = Comp_Structure
+
+
+
+
+%Z is the linker index values for each amino acid as calculted from
+%the function "Linker_Index"
+%Z = Linker_Index ('linker.fasta', 'domain.fasta');
+%The returned values are as follows:
+
+
+Z.A= 0;
+Z.R= -0.8690;
+Z.N= 0.4818;
+Z.D= 0.0800;
+Z.C= 0.9280;
+Z.Q= -0.1892;
+Z.E= 0.2744;
+Z.G= 1.5445;
+Z.H= 1.0561;
+Z.I= 0.3677;
+Z.L= 0.8473;
+Z.K= 0.1823;
+Z.M= 3.5264;
+Z.F= 0.6190;
+Z.P= 0.0870;
+Z.S= -0.0476;
+Z.T= -0.4595;
+Z.W= 2.6391;
+Z.Y= 0.6931;
+Z.V= 0.7167;
+
+% to calculate the THE AVERAGED LINKER INDEX (mij) VALUES FOR A PROTIEN SEQUENCE
+
+for j = 1 : L
+    
+    if (j >= 1) && (j <= ((w - 1)/2))
+        windowSize = j+((w - 1)/2);
+        WindowSequence = proteinSequence (1 : j+((w-1)/2));
+    
+    elseif (j > ((w - 1)/2)) && (j <= (L - ((w - 1)/2)))  
+        windowSize = w;
+        WindowSequence = proteinSequence (j-((w-1)/2) : j+((w-1)/2));
+       
+    else
+        windowSize = L-j+((w-1)/2)+1;
+        WindowSequence = proteinSequence (j-((w-1)/2) : L);
+    
+    end
+    
+    T2 = aacount (WindowSequence);    
+%     m(j) =(T2.A * (Z.A ^gama * CompIndex.A ^beta)^(1/(gama+beta)) + T2.R * (Z.R ^gama * CompIndex.R ^beta)^(1/(gama+beta)) + T2.N * (Z.N ^gama * CompIndex.N ^beta)^(1/(gama+beta)) + T2.D * (Z.D ^gama * CompIndex.D ^beta)^(1/(gama+beta)) + T2.C * (Z.C ^gama * CompIndex.C ^beta)^(1/(gama+beta)) + T2.Q * (Z.Q ^gama * CompIndex.Q ^beta)^(1/(gama+beta)) + T2.E * (Z.E ^gama * CompIndex.E ^beta)^(1/(gama+beta)) + T2.G * (Z.G ^gama * CompIndex.G ^beta)^(1/(gama+beta)) + T2.H * (Z.H ^gama * CompIndex.H ^beta)^(1/(gama+beta)) + T2.I * (Z.I ^gama * CompIndex.I ^beta)^(1/(gama+beta)) + T2.L * (Z.L ^gama * CompIndex.L ^beta)^(1/(gama+beta)) + T2.K * (Z.K ^gama * CompIndex.K ^beta)^(1/(gama+beta)) + T2.M * (Z.M ^gama * CompIndex.M ^beta)^(1/(gama+beta)) + T2.F * (Z.F ^gama * CompIndex.F ^beta)^(1/(gama+beta)) + T2.P * (Z.P ^gama * CompIndex.P ^beta)^(1/(gama+beta)) + T2.S * (Z.S ^gama * CompIndex.S ^beta)^(1/(gama+beta)) + T2.T * (Z.T ^gama * CompIndex.T ^beta)^(1/(gama+beta)) + T2.W * (Z.W ^gama * CompIndex.W ^beta)^(1/(gama+beta)) + T2.Y * (Z.Y ^gama * CompIndex.Y ^beta)^(1/(gama+beta)) + T2.V * (Z.V ^gama * CompIndex.V ^beta)^(1/(gama+beta)) ) / windowSize;
+%     m(j) =100*(T2.A * (Z.A ^gama) * (CompIndex.A ^beta) + T2.R * (Z.R ^gama) * (CompIndex.R ^beta) + T2.N * (Z.N ^gama) * (CompIndex.N ^beta) + T2.D * (Z.D ^gama) * (CompIndex.D ^beta) + T2.C * (Z.C ^gama) * (CompIndex.C ^beta) + T2.Q * (Z.Q ^gama) * (CompIndex.Q ^beta) + T2.E * (Z.E ^gama) * (CompIndex.E ^beta) + T2.G * (Z.G ^gama) * (CompIndex.G ^beta) + T2.H * (Z.H ^gama) * (CompIndex.H ^beta) + T2.I * (Z.I ^gama) * (CompIndex.I ^beta) + T2.L * (Z.L ^gama) * (CompIndex.L ^beta) + T2.K * (Z.K ^gama) * (CompIndex.K ^beta) + T2.M * (Z.M ^gama) * (CompIndex.M ^beta) + T2.F * (Z.F ^gama) * (CompIndex.F ^beta) + T2.P * (Z.P ^gama) * (CompIndex.P ^beta) + T2.S * (Z.S ^gama) * (CompIndex.S ^beta) + T2.T * (Z.T ^gama) * (CompIndex.T ^beta) + T2.W * (Z.W ^gama) * (CompIndex.W ^beta) + T2.Y * (Z.Y ^gama) * (CompIndex.Y ^beta) + T2.V * (Z.V ^gama) * (CompIndex.V ^beta )) / windowSize;
+    m(j) =100*(T2.A * (Z.A ^gama) * ((CompIndex.A + epsilon) ^beta) + T2.R * (Z.R ^gama) * ((CompIndex.R + epsilon) ^beta) + T2.N * (Z.N ^gama) * ((CompIndex.N + epsilon) ^beta) + T2.D * (Z.D ^gama) * ((CompIndex.D + epsilon) ^beta) + T2.C * (Z.C ^gama) * ((CompIndex.C + epsilon) ^beta) + T2.Q * (Z.Q ^gama) * ((CompIndex.Q + epsilon) ^beta) + T2.E * (Z.E ^gama) * ((CompIndex.E + epsilon) ^beta) + T2.G * (Z.G ^gama) * ((CompIndex.G + epsilon) ^beta) + T2.H * (Z.H ^gama) * ((CompIndex.H + epsilon) ^beta) + T2.I * (Z.I ^gama) * ((CompIndex.I + epsilon) ^beta) + T2.L * (Z.L ^gama) * ((CompIndex.L + epsilon) ^beta) + T2.K * (Z.K ^gama) * ((CompIndex.K + epsilon) ^beta) + T2.M * (Z.M ^gama) * ((CompIndex.M + epsilon) ^beta) + T2.F * (Z.F ^gama) * ((CompIndex.F + epsilon) ^beta) + T2.P * (Z.P ^gama) * ((CompIndex.P + epsilon) ^beta) + T2.S * (Z.S ^gama) * ((CompIndex.S + epsilon) ^beta) + T2.T * (Z.T ^gama) * ((CompIndex.T + epsilon) ^beta) + T2.W * (Z.W ^gama) * ((CompIndex.W + epsilon) ^beta) + T2.Y * (Z.Y ^gama) * ((CompIndex.Y + epsilon) ^beta) + T2.V * (Z.V ^gama) * ((CompIndex.V + epsilon) ^beta)) / windowSize;
+%     m(j) =(T2.A * abs(Z.A) ^gama * abs(CompIndex.A) ^beta + T2.R * abs(Z.R) ^gama * abs(CompIndex.R) ^beta + T2.N * abs(Z.N) ^gama * abs(CompIndex.N) ^beta + T2.D * abs(Z.D) ^gama * abs(CompIndex.D) ^beta + T2.C * abs(Z.C) ^gama * abs(CompIndex.C) ^beta + T2.Q * abs(Z.Q) ^gama * abs(CompIndex.Q) ^beta + T2.E * abs(Z.E) ^gama * abs(CompIndex.E) ^beta + T2.G * abs(Z.G) ^gama * abs(CompIndex.G) ^beta + T2.H * abs(Z.H) ^gama * abs(CompIndex.H) ^beta + T2.I * abs(Z.I) ^gama * abs(CompIndex.I) ^beta + T2.L * abs(Z.L) ^gama * abs(CompIndex.L) ^beta + T2.K * abs(Z.K) ^gama * abs(CompIndex.K) ^beta + T2.M * abs(Z.M) ^gama * abs(CompIndex.M) ^beta + T2.F * abs(Z.F) ^gama * abs(CompIndex.F) ^beta + T2.P * abs(Z.P) ^gama * abs(CompIndex.P) ^beta + T2.S * abs(Z.S) ^gama * abs(CompIndex.S) ^beta + T2.T * abs(Z.T) ^gama * abs(CompIndex.T) ^beta + T2.W * abs(Z.W) ^gama * abs(CompIndex.W) ^beta + T2.Y * abs(Z.Y) ^gama * abs(CompIndex.Y) ^beta + T2.V * abs(Z.V) ^gama * abs(CompIndex.V) ^beta ) / windowSize;
+    
+    if m(j) < threshold(1,j)
+        compositional_index_output(j) = 1;
+    else 
+        compositional_index_output(j) = 0;
+    end
+        
+end
+
+compositional_index = m;    %%%%%%%%%%%%%% new added 
+
+% 
+
+
+% TrueLabels = zeros(1, size(TestSequence,2));
+% error = zeros(1, size(TestSequence,2));
+% 
+% %TrueLabels(421:487) = 1;
+% %TrueLabels(387:448) = 1;
+% %TrueLabels(157:223) = 1;  % these are the indeces of AAs of the linker
+% %part of the given sequence
+% TrueLabels(119:136) = 1;
+% TrueLabels(197:220) = 1;
+% TrueLabels(281:296) = 1;
+
+%error(421:487 = TrueLabels(421:487) - compositional_index_output(421:487);
+%error(387:448) = TrueLabels(387:448) - compositional_index_output(387:448);
+%error(157:223) = TrueLabels(157:223) - compositional_index_output(157:223);
+% error(119:136) = trueLabels(119:136) - compositional_index_output(119:136);
+% error(197:220) = trueLabels(197:220) - compositional_index_output(197:220);
+% error(281:296) = trueLabels(281:296) - compositional_index_output(281:296);
+% error = abs(trueLabels - compositional_index_output);      
+% Acc = 1 - (sum(error)/(size(trueLabels,2)));
+
+EVAL = Evaluate2(trueLabels, compositional_index_output);
+% Sensitivity = EVAL(2);
+% Specificity= EVAL(3);
+%fprintf(1,'  Sensitivity = %10.5f\n',Sensitivity);    %%%%%%%%%%% temporary
